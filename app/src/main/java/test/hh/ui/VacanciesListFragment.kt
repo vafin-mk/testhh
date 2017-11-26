@@ -4,9 +4,7 @@ import android.os.Bundle
 import android.support.design.widget.TextInputLayout
 import android.support.v4.app.Fragment
 import android.support.v4.widget.SwipeRefreshLayout
-import android.support.v7.widget.AppCompatEditText
-import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.*
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -29,7 +27,7 @@ class VacanciesListFragment : Fragment() {
   lateinit var swipeRefreshLayout: SwipeRefreshLayout
 
   override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-    return inflater?.inflate(R.layout.fragment_list, container, false)
+    return inflater?.inflate(R.layout.fragment_vacancies_list, container, false)
   }
 
   override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
@@ -47,21 +45,32 @@ class VacanciesListFragment : Fragment() {
     swipeRefreshLayout.setOnRefreshListener { updateVacancies() }
 
     vacanciesList = view.findViewById(R.id.list_vacancies)
+    vacanciesList.addItemDecoration(DividerItemDecoration(vacanciesList.context, OrientationHelper.VERTICAL))
     vacanciesList.layoutManager = LinearLayoutManager(activity)
   }
 
   private fun updateVacancies() {
+    swipeRefreshLayout.isRefreshing = true
     (activity.application as HHApp).serverConnector.api.vacancies(searchFieldText.text.toString())
       .enqueue(object:Callback<SearchResult>{
       override fun onResponse(call: Call<SearchResult>, response: Response<SearchResult>) {
-        vacanciesList.adapter = VacanciesAdapter(response.body()?.vacancies ?: emptyList()) {vacancy ->
-          Log.e("Test", "${vacancy.name} -- ${vacancy.salary} -- ${vacancy.employer}")
-        }
+        swipeRefreshLayout.isRefreshing = false
+        vacanciesList.adapter = VacanciesAdapter(activity.applicationContext, response.body()?.vacancies ?: emptyList()) {openVacancyDescription(it)}
       }
 
       override fun onFailure(call: Call<SearchResult>, t: Throwable) {
         Log.e("Error", t.toString())
+        swipeRefreshLayout.isRefreshing = false
       }
     })
+  }
+
+  private fun openVacancyDescription(vacancy: Vacancy) {
+    val fragment = VacancyDescriptionFragment()
+    val args = Bundle()
+    args.putString("vacancy", (activity.application as HHApp).gson.toJson(vacancy))
+    fragment.arguments = args
+    val fm = activity.supportFragmentManager
+    fm.beginTransaction().replace(R.id.container, fragment).addToBackStack(null).commit()
   }
 }

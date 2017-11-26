@@ -1,3 +1,8 @@
 <resources>
-  <string name="app_name">TestHH</string>
+  <string name="app_name">Вакансии HeadHunter</string>
+  <string name="salary_from">От %1$d</string>
+  <string name="salary_to">до %1$d</string>
+  <string name="salary_gross">до вычета налогов</string>
+  <string name="no_salary">Заработная плата не указана</string>
+  <string name="search_text">Поле поиска</string>
 </resources>

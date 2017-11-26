@@ -1,5 +1,6 @@
 package test.hh.server
 
+import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
 
 data class SearchResult(

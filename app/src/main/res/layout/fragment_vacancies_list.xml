@@ -7,10 +7,11 @@
 
   <ImageView
     android:id="@+id/btn_search"
-    android:layout_alignParentTop="true"
     android:layout_alignParentRight="true"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
+    android:paddingTop="16dp"
+    android:paddingRight="16dp"
+    android:layout_width="48dp"
+    android:layout_height="48dp"
     android:src="@android:drawable/ic_menu_search"/>
 
   <android.support.design.widget.TextInputLayout
@@ -18,18 +19,17 @@
     android:layout_alignParentTop="true"
     android:layout_toLeftOf="@id/btn_search"
     android:layout_alignParentLeft="true"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp"
+    android:hint="@string/search_text">
 
     <android.support.v7.widget.AppCompatEditText
       android:id="@+id/et_search_field"
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:hint="Input search text"/>
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"/>
 
   </android.support.design.widget.TextInputLayout>
-
-
 
   <android.support.v4.widget.SwipeRefreshLayout
     android:id="@+id/swipe_refresh_layout"
