@@ -10,7 +10,8 @@ data class SearchResult(
 data class Vacancy(
   @SerializedName("salary") val salary: Salary?,
   @SerializedName("name") val name: String?,
-  @SerializedName("employer") val employer: Employer?
+  @SerializedName("employer") val employer: Employer?,
+  @SerializedName("snippet") val info: VacancyInfo?
 )
 
 data class Salary(
@@ -22,4 +23,9 @@ data class Salary(
 
 data class Employer(
   @SerializedName("name") val name: String?
+)
+
+data class VacancyInfo(
+  @SerializedName("requirement") val requirement: String?,
+  @SerializedName("responsibility") val responsibility: String?
 )

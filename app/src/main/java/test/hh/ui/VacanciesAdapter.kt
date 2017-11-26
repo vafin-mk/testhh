@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import kotlinx.android.synthetic.main.item_vacancy.view.*
 import test.hh.R
+import test.hh.prettySalaryText
 import test.hh.server.Vacancy
 
 class VacanciesAdapter(private val context: Context, private val items: List<Vacancy>, private val onVacancySelected: (Vacancy) -> Unit): RecyclerView.Adapter<VacanciesAdapter.ViewHolder>() {
@@ -17,17 +18,7 @@ class VacanciesAdapter(private val context: Context, private val items: List<Vac
     val vacancy = items[position]
     holder.name.text = vacancy.name
     holder.employer.text = vacancy.employer?.name ?: ""
-    holder.salary.text = prettySalaryText(vacancy)
-  }
-
-  private fun prettySalaryText(vacancy: Vacancy): String {
-    if (vacancy.salary == null || (vacancy.salary.min == null && vacancy.salary.max == null)) return context.getString(R.string.no_salary)
-    return buildString {
-      if (vacancy.salary.min != null) append(context.getString(R.string.salary_from, vacancy.salary.min.toInt())).append(" ")
-      if (vacancy.salary.max != null) append(context.getString(R.string.salary_to, vacancy.salary.max.toInt())).append(" ")
-      append(vacancy.salary.currency).append(" ")
-      if (vacancy.salary.gross == true) append(context.getString(R.string.salary_gross))
-    }
+    holder.salary.text = prettySalaryText(context, vacancy)
   }
 
   override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder = ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_vacancy, parent, false))

@@ -1,5 +1,7 @@
 package test.hh.ui
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.design.widget.TextInputLayout
 import android.support.v4.app.Fragment
@@ -10,6 +12,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import com.google.gson.reflect.TypeToken
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -18,13 +21,17 @@ import test.hh.R
 import test.hh.server.SearchResult
 import test.hh.server.Vacancy
 
+//todo fancy empty view when no vacancies for search
 class VacanciesListFragment : Fragment() {
+  private val PREFS = "PREFS"
 
   lateinit var btnSearch: ImageView
   lateinit var searchFieldLayout: TextInputLayout
   lateinit var searchFieldText: AppCompatEditText
   lateinit var vacanciesList: RecyclerView
   lateinit var swipeRefreshLayout: SwipeRefreshLayout
+
+  lateinit var prefs: SharedPreferences
 
   override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
     return inflater?.inflate(R.layout.fragment_vacancies_list, container, false)
@@ -47,6 +54,10 @@ class VacanciesListFragment : Fragment() {
     vacanciesList = view.findViewById(R.id.list_vacancies)
     vacanciesList.addItemDecoration(DividerItemDecoration(vacanciesList.context, OrientationHelper.VERTICAL))
     vacanciesList.layoutManager = LinearLayoutManager(activity)
+
+    prefs = activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+    val vacancies = (activity.application as HHApp).gson.fromJson<List<Vacancy>>(prefs.getString("vacancies", ""), object:TypeToken<List<Vacancy>>(){}.type) ?: emptyList()
+    setVacancies(vacancies)
   }
 
   private fun updateVacancies() {
@@ -55,14 +66,20 @@ class VacanciesListFragment : Fragment() {
       .enqueue(object:Callback<SearchResult>{
       override fun onResponse(call: Call<SearchResult>, response: Response<SearchResult>) {
         swipeRefreshLayout.isRefreshing = false
-        vacanciesList.adapter = VacanciesAdapter(activity.applicationContext, response.body()?.vacancies ?: emptyList()) {openVacancyDescription(it)}
+        val vacancies = response.body()?.vacancies ?: emptyList()
+        setVacancies(vacancies)
+        if (vacancies.isNotEmpty()) prefs.edit().putString("vacancies", (activity.application as HHApp).gson.toJson(vacancies)).apply()
       }
 
       override fun onFailure(call: Call<SearchResult>, t: Throwable) {
-        Log.e("Error", t.toString())
+        Log.e("Error", t.toString())//todo some nice dialog
         swipeRefreshLayout.isRefreshing = false
       }
     })
+  }
+
+  private fun setVacancies(vacancies: List<Vacancy>) {
+    vacanciesList.adapter = VacanciesAdapter(activity.applicationContext, vacancies) {openVacancyDescription(it)}
   }
 
   private fun openVacancyDescription(vacancy: Vacancy) {
