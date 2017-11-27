@@ -5,4 +5,5 @@
   <string name="salary_gross">до вычета налогов</string>
   <string name="no_salary">Заработная плата не указана</string>
   <string name="search_text">Поле поиска</string>
+  <string name="no_vacancy_selected">Выберите вакансию</string>
 </resources>

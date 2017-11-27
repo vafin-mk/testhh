@@ -13,11 +13,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import com.google.gson.reflect.TypeToken
+import org.greenrobot.eventbus.EventBus
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import test.hh.HHApp
 import test.hh.R
+import test.hh.VacancySelectedEvent
 import test.hh.server.SearchResult
 import test.hh.server.Vacancy
 
@@ -33,13 +35,12 @@ class VacanciesListFragment : Fragment() {
 
   lateinit var prefs: SharedPreferences
 
-  override fun onCreateView(inflater: LayoutInflater?, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-    return inflater?.inflate(R.layout.fragment_vacancies_list, container, false)
+  override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    return inflater.inflate(R.layout.fragment_vacancies_list, container, false)
   }
 
-  override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
+  override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
     super.onViewCreated(view, savedInstanceState)
-    if (view == null) throw IllegalStateException("view is null")
 
     btnSearch = view.findViewById(R.id.btn_search)
     btnSearch.setOnClickListener{ updateVacancies() }
@@ -55,20 +56,20 @@ class VacanciesListFragment : Fragment() {
     vacanciesList.addItemDecoration(DividerItemDecoration(vacanciesList.context, OrientationHelper.VERTICAL))
     vacanciesList.layoutManager = LinearLayoutManager(activity)
 
-    prefs = activity.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-    val vacancies = (activity.application as HHApp).gson.fromJson<List<Vacancy>>(prefs.getString("vacancies", ""), object:TypeToken<List<Vacancy>>(){}.type) ?: emptyList()
+    prefs = activity!!.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+    val vacancies = (activity!!.application as HHApp).gson.fromJson<List<Vacancy>>(prefs.getString("vacancies", ""), object:TypeToken<List<Vacancy>>(){}.type) ?: emptyList()
     setVacancies(vacancies)
   }
 
   private fun updateVacancies() {
     swipeRefreshLayout.isRefreshing = true
-    (activity.application as HHApp).serverConnector.api.vacancies(searchFieldText.text.toString())
+    (activity!!.application as HHApp).serverConnector.api.vacancies(searchFieldText.text.toString())
       .enqueue(object:Callback<SearchResult>{
       override fun onResponse(call: Call<SearchResult>, response: Response<SearchResult>) {
         swipeRefreshLayout.isRefreshing = false
         val vacancies = response.body()?.vacancies ?: emptyList()
         setVacancies(vacancies)
-        if (vacancies.isNotEmpty()) prefs.edit().putString("vacancies", (activity.application as HHApp).gson.toJson(vacancies)).apply()
+        if (vacancies.isNotEmpty()) prefs.edit().putString("vacancies", (activity!!.application as HHApp).gson.toJson(vacancies)).apply()
       }
 
       override fun onFailure(call: Call<SearchResult>, t: Throwable) {
@@ -79,15 +80,20 @@ class VacanciesListFragment : Fragment() {
   }
 
   private fun setVacancies(vacancies: List<Vacancy>) {
-    vacanciesList.adapter = VacanciesAdapter(activity.applicationContext, vacancies) {openVacancyDescription(it)}
+    vacanciesList.adapter = VacanciesAdapter(activity!!.applicationContext, vacancies) {openVacancyDescription(it)}
   }
 
   private fun openVacancyDescription(vacancy: Vacancy) {
-    val fragment = VacancyDescriptionFragment()
-    val args = Bundle()
-    args.putString("vacancy", (activity.application as HHApp).gson.toJson(vacancy))
-    fragment.arguments = args
-    val fm = activity.supportFragmentManager
-    fm.beginTransaction().replace(R.id.container, fragment).addToBackStack(null).commit()
+    val isTablet = resources.getBoolean(R.bool.is_tablet)
+    if (isTablet) {
+      EventBus.getDefault().post(VacancySelectedEvent(vacancy))
+    } else {
+      val fragment = VacancyDescriptionFragment()
+      val args = Bundle()
+      args.putString("vacancy", (activity!!.application as HHApp).gson.toJson(vacancy))
+      fragment.arguments = args
+      val fm = activity!!.supportFragmentManager
+      fm.beginTransaction().replace(R.id.container, fragment).addToBackStack(null).commit()
+    }
   }
 }
